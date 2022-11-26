@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head >
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.min.js" integrity="sha512-GtM/5c/Ie0lStj6QwEG0HkpMQuGr9vrOAgFD4nNmImviyZvsJxN7TYU7b+R7Kthob0zFBUpuxfl3R3Mn1qekTw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <title>Document</title>
+</head>
+<body>
+
+    <input type="text" name="username" id="username">
+    <button type="button" onclick="join()">Join</button>
+
+    <br><br><br>
+
+    <div id="">
+        <ul id="users">
+
+        </ul>
+    </div>
+
+    <br><br><br>
+
+    <div id="thread">
+        <ul id="msg">
+
+        </ul>
+    </div>
+
+    <textarea id="message" cols="30" rows="2" name="message"></textarea>
+    <br>
+    <button type="button" onclick="sendMsg()">Send Message</button>
+    
+  
+    <script>
+
+        let sessionid = "";
+        let sessionname = "";
+
+        let socket;
+
+
+        
+
+        
+
+           
+
+        function join(){
+            socket = io("ws://localhost:8080");
+
+
+            let userlist = document.getElementById(`users`);
+            let username = document.getElementById(`username`).value;
+
+            sessionname = username;
+            socket.emit('join',JSON.stringify({name:username}));
+
+
+
+            socket.on('join',response=>{
+                let data = JSON.parse(response);
+                let users = data.users;
+
+                let tmpusers = "";
+                users.forEach(element => {
+                    tmpusers += `<li>${element.name}</li>`;
+                });
+                userlist.innerHTML = tmpusers;
+               // console.log(`joining ${response}`);
+
+
+            });
+
+
+
+            socket.on('message',response=>{
+                let data  = JSON.parse(response);
+                let thread = document.getElementById(`msg`);
+
+                thread.innerHTML +=`<li><b>${data.name}:</b> ${data.message}</li>`;
+                console.log(response);
+            });
+
+
+
+
+            socket.on('user_disconnected',response=>{
+                console.log(response);
+                let data = JSON.parse(response);
+                let users = data.users;
+
+                let tmpusers = "";
+                users.forEach(element => {
+                    tmpusers += `<li>${element.name}</li>`;
+                });
+
+                userlist.innerHTML = tmpusers;
+            });
+
+        }
+       
+
+        
+        function sendMsg() {
+
+            let msg = document.getElementById(`message`).value;
+
+            socket.emit("message", 
+                JSON.stringify({
+                    name:sessionname,
+                    message:msg
+                })
+            );
+        }
+
+        
+        
+
+        
+    </script>
+</body>
+</html>
